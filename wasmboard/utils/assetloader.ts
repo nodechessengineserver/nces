@@ -105,4 +105,15 @@ class AssetLoader{
         //console.log("assets loaded ok")
         if(this.callback!=undefined) this.callback()
     }
+
+}
+
+class AjaxRequest{
+    ajaxasset:AjaxAsset
+    constructor(json:any){
+        this.ajaxasset=new AjaxAsset(json)
+        new AssetLoader().
+            add(this.ajaxasset).        
+            load()    
+    }                      
 }

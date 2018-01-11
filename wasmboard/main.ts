@@ -3,6 +3,12 @@ import wboard=Globals.wboard
 
 function main(){    
     gui.draw()
+
+    window.onbeforeunload=e=>{
+        new AjaxRequest({
+            action:"shutdown"
+        })
+    }
 }
 
 function mainloader(){    
