@@ -414,6 +414,11 @@ function createServer() {
         console.log("ajax " + action);
         var b = req.body;
         res.setHeader("Content-Type", "application/json");
+        if (action == "shutdown") {
+            console.log("shutdown requested");
+            server.close();
+            process.exit();
+        }
         if (action == "listdir") {
             System.listDir(b.path, function (err, files) {
                 var result = { err: err, files: files };

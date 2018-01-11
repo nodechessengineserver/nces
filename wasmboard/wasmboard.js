@@ -213,6 +213,15 @@ var AssetLoader = /** @class */ (function () {
     };
     return AssetLoader;
 }());
+var AjaxRequest = /** @class */ (function () {
+    function AjaxRequest(json) {
+        this.ajaxasset = new AjaxAsset(json);
+        new AssetLoader().
+            add(this.ajaxasset).
+            load();
+    }
+    return AjaxRequest;
+}());
 var Vectors;
 (function (Vectors) {
     var ScreenVector = /** @class */ (function () {
@@ -4716,6 +4725,11 @@ var gui = Globals.gui;
 var wboard = Globals.wboard;
 function main() {
     gui.draw();
+    window.onbeforeunload = function (e) {
+        new AjaxRequest({
+            action: "shutdown"
+        });
+    };
 }
 function mainloader() {
     //localStorage.clear()
