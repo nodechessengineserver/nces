@@ -1,6 +1,6 @@
 {
   "name": "nces",
-  "version": "1.0.22",
+  "version": "1.0.23",
   "description": "Node Chess Engine Server",
   "main": "nces.js",
   "bin": {
