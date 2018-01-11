@@ -1,0 +1,35 @@
+{
+  "name": "nces",
+  "version": "1.0.22",
+  "description": "Node Chess Engine Server",
+  "main": "nces.js",
+  "bin": {
+    "nces": "nces.js"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/nodechessengineserver/nces.git"
+  },
+  "keywords": [
+    "chess",
+    "engine",
+    "server"
+  ],
+  "author": "Nodechess Engineserver",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/nodechessengineserver/nces/issues"
+  },
+  "homepage": "https://github.com/nodechessengineserver/nces#readme",
+  "dependencies": {
+    "@types/node": "^8.0.53",
+    "body-parser": "^1.18.2",
+    "express": "^4.16.2",
+    "formidable": "^1.1.1",
+    "opn": "^5.1.0",
+    "ws": "^3.3.1"
+  }
+}

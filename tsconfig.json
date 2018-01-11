@@ -1,0 +1,13 @@
+{
+    "compilerOptions": {        
+        "target":"ES5", 
+        "outFile":"nces.js",
+        "module":"AMD"
+    },
+    "files": [             
+        "head.ts",
+        "system.ts",
+        "server.ts",
+		"main.ts"
+    ]
+}
