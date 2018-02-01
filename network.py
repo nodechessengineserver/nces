@@ -120,7 +120,7 @@ def model_has_nan():
 
 def calc_pos_value(fen):
 	board.setFromFen(fen)
-	value=sess.run(engine, {X:board.inputsrow, Y:[[0.0]]})[0][0]*OUTPUT_FACTOR/REDUCE_ONE
+	value=sess.run(engine, {X:board.inputsrow, Y:[[0.0]]})[0][0]*OUTPUT_FACTOR/REDUCE_ONE	
 	return value
 
 def test():
@@ -255,7 +255,7 @@ def play_move(data):
 			if actualvalue < bestvalue:
 				selsan=item["san"]				
 				bestvalue=actualvalue		
-		pf("wise move {0:8s} value {1:20.10f}".format(selsan,bestvalue))
+		pf("wise move {0:8s} value {1:20.10f} mat {2:d}".format(selsan,bestvalue,board.mat_balance()))
 		time.sleep(0.3)
 	else:
 		item=random.choice(data)
