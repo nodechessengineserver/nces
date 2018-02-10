@@ -7,6 +7,7 @@ evals.json
 *.txt
 
 !nces.bat
+!site/atomicbook/startup.json
 
 /__pycache__
 /enginemodel

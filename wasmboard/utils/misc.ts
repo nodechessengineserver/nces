@@ -109,4 +109,12 @@ namespace Misc {
         if(x>max) return max
         return x
     }
+
+    export function scoreColor(score:number){
+        if(score<-1000) return "#f00"
+        if(score<-500) return "#a00"
+        if(score<0) return "#700"
+        if(score<500) return "#070"
+        return("#0f0")
+    }
 }

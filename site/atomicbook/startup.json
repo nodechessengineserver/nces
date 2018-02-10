@@ -1,0 +1,9 @@
+{
+	"atomicbook":{
+		"dbName":"atomicbook",
+		"collName":"atomicbook",
+		"databaseUrl":"https://api.mlab.com/api/1",
+		"databaseAccessToken":"",
+		"uriTemplate":"mongodb://<dbuser>:<dbpassword>@ds229388.mlab.com:29388/atomicbook"
+	}
+}

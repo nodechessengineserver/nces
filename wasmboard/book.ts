@@ -57,6 +57,8 @@ class BookMove {
     san:string
     annot:Annotation=new Annotation()
 
+    ms:number
+
     constructor(_san:string){
         this.san=_san
     }
@@ -106,9 +108,15 @@ class BookPosition {
     sortedSans():string[]{        
         let keys=Object.keys(this.moves)
         let sorted=keys.sort((a,b)=>{
-            let ma=this.moves[a].annot
-            let mb=this.moves[b].annot
-            return mb.priority-ma.priority
+            let movea=this.moves[a]
+            let moveb=this.moves[b]
+            let ma=movea.annot
+            let mb=moveb.annot           
+            if(ma.priority!=mb.priority)
+                return mb.priority-ma.priority
+            let msa=movea.ms||0
+            let msb=moveb.ms||0          
+                return msb-msa
         })   
         return sorted
     }

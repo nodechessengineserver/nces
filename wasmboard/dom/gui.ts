@@ -82,6 +82,11 @@ class GUI{
 
     analyzer:Analysis.Analyzer
 
+    databaseUrl:string
+    databaseAccessToken:string
+
+    doAtomicBook:boolean=false
+
     constructor(){
         this.root=new HTMLDivElement_().position("relative")        
         this.dialogroot=new HTMLDivElement_()
@@ -440,7 +445,7 @@ class GUI{
     startupdone:boolean=false
 
     evalsasset:AjaxAsset
-    evals:any
+    evals:any={}
 
     draw(){
         //////////////////////////////////////////////////////////
@@ -566,7 +571,7 @@ class GUI{
             console.log("info: no special startup instructions were detected")
             return
         }
-        let su=this.startup            
+        let su=this.startup                    
         if(Misc.isDefined(su.selectedTab)){
             this.tabs.setSelected(su.selectedTab)
         }
@@ -577,6 +582,11 @@ class GUI{
                     setcallback(this.brackeJsonLoaded.bind(this)).
                     load()    
             }
+        }
+        if(Misc.isDefined(su.atomicbook)){
+            console.log("atomicbook detected",su.atomicbook)     
+            this.doAtomicBook=true
+            Globals.wboard.showBookPage()
         }
     }
     startDefaultEngine(){
@@ -896,7 +906,11 @@ class GUI{
     evalsLoaded(){        
         let res=this.evalsasset.resjson
         if(!res.error){
-            this.evals=JSON.parse(res.content)
+            try{
+                this.evals=JSON.parse(res.content)
+            }catch(err){
+                console.log("could not parse evals")
+            }            
             for(let fen in this.evals){
                 if(fen.lastIndexOf(" b")>0){
                     delete this.evals[fen]

@@ -40,14 +40,17 @@ class AjaxAsset implements Loadable {
     }
     load(){
         let body=JSON.stringify(this.reqjson) 
-        let headers = new Headers()
+        let headers = new Headers()        
         headers.append("Content-Type", "application/json");       
         fetch(this.url,{
             method: 'post',
             headers: headers,
             body: body
         }).then(
-            response=>response.json()
+            response=>{                
+                if(response.ok) return response.json()
+                return {}
+            }
         ).then(
             data=>this.onload(data)
         )

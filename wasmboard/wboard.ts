@@ -293,7 +293,38 @@ class wBoard extends WasmLoader.WasmLoader implements Loadable{
         this.draw()
     }
     showBookPage(){
-        if(Globals.gui.book==null) return
+        let gui=Globals.gui
+        let book=gui.book
+        if(book==null) return        
+        if(gui.doAtomicBook){
+            console.log("looking up page in database")
+            let ab=gui.startup.atomicbook  
+            let fen=this.reportFen()
+            let tfen=gui.book.truncfen(fen)          
+            let apiurl=`${ab.databaseUrl}/databases/${ab.dbName}/collections/${ab.collName}?q={"tfen":"${tfen}"}&apiKey=${ab.databaseAccessToken}`
+            fetch(apiurl).then(response=>response.text()).then(content=>{
+                try{
+                    console.log("page loaded")
+                    let json=JSON.parse(content)                    
+                    let doc=json[0]
+                    let movestext=doc.movestext
+                    let moves=JSON.parse(movestext)
+                    let pos=Globals.gui.book.getPosition(fen)
+                    for(let san in moves){
+                        let ms=moves[san]["ms"]
+                        let bm=pos.getMove(san)
+                        bm.ms=ms
+                    }
+                }catch(err){
+                    console.log(err)
+                }                
+                this.showBookPageInner()            
+            })            
+        }else{
+            this.showBookPageInner()
+        }
+    }
+    showBookPageInner(){
         let pos=Globals.gui.book.getPosition(this.reportFen())
         let bcd=Globals.gui.bookcontentdiv
         bcd.html("")
@@ -304,6 +335,7 @@ class wBoard extends WasmLoader.WasmLoader implements Loadable{
             let tr=new HTMLTableRowElement_()
             let bm=pos.getMove(san)            
             let annot=bm.annot
+            let ms=bm.ms
             let full=san+" "+annot.getAnnotStr()
             let a=new HTMLLabelElement_().                
                 html(full).
@@ -317,9 +349,16 @@ class wBoard extends WasmLoader.WasmLoader implements Loadable{
                 paddingPx(5).
                 widthPx(100).
                 appendChild(a))
+            tr.appendChild(new HTMLTableColElement_().
+                paddingPx(5).
+                widthPx(100).
+                fontSizePx(22).
+                fontWeight("bold").
+                color(Misc.scoreColor(ms)).
+                appendChild(new HTMLDivElement_().html(`${ms}`)))
             let cspan=new HTMLSpanElement_().opacityNumber(0.8)
             for(let akey in BookUtils.annotations){
-                let annot=BookUtils.annotations[akey]
+                let annot=BookUtils.annotations[akey]                
                 let ab=new HTMLButtonElement_().
                     onmousedown(this.annotateMove.bind(this,san,akey)).
                     value(akey).
