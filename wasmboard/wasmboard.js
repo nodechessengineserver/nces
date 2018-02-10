@@ -154,7 +154,11 @@ var AjaxAsset = /** @class */ (function () {
             method: 'post',
             headers: headers,
             body: body
-        }).then(function (response) { return response.json(); }).then(function (data) { return _this.onload(data); });
+        }).then(function (response) {
+            if (response.ok)
+                return response.json();
+            return {};
+        }).then(function (data) { return _this.onload(data); });
     };
     AjaxAsset.prototype.onload = function (data) {
         this.resjson = data;
@@ -514,6 +518,18 @@ var Misc;
         return x;
     }
     Misc.limit = limit;
+    function scoreColor(score) {
+        if (score < -1000)
+            return "#f00";
+        if (score < -500)
+            return "#a00";
+        if (score < 0)
+            return "#700";
+        if (score < 500)
+            return "#070";
+        return ("#0f0");
+    }
+    Misc.scoreColor = scoreColor;
 })(Misc || (Misc = {}));
 var Analysis;
 (function (Analysis) {
@@ -884,9 +900,15 @@ var BookPosition = /** @class */ (function () {
         var _this = this;
         var keys = Object.keys(this.moves);
         var sorted = keys.sort(function (a, b) {
-            var ma = _this.moves[a].annot;
-            var mb = _this.moves[b].annot;
-            return mb.priority - ma.priority;
+            var movea = _this.moves[a];
+            var moveb = _this.moves[b];
+            var ma = movea.annot;
+            var mb = moveb.annot;
+            if (ma.priority != mb.priority)
+                return mb.priority - ma.priority;
+            var msa = movea.ms || 0;
+            var msb = moveb.ms || 0;
+            return msb - msa;
         });
         return sorted;
     };
@@ -3312,7 +3334,9 @@ var GUI = /** @class */ (function () {
         this.setup = new Setup();
         this.appconfig = {};
         this.state = new GUIState();
+        this.doAtomicBook = false;
         this.startupdone = false;
+        this.evals = {};
         this.bracketjsonasset = new TextAsset("bracket.json");
         this.oldtabid = null;
         this.rndon = false;
@@ -3753,6 +3777,11 @@ var GUI = /** @class */ (function () {
                     load();
             }
         }
+        if (Misc.isDefined(su.atomicbook)) {
+            console.log("atomicbook detected", su.atomicbook);
+            this.doAtomicBook = true;
+            Globals.wboard.showBookPage();
+        }
     };
     GUI.prototype.startDefaultEngine = function () {
         var defaultengine = this.setup.defaultengines[this.state._variant];
@@ -4071,7 +4100,12 @@ var GUI = /** @class */ (function () {
     GUI.prototype.evalsLoaded = function () {
         var res = this.evalsasset.resjson;
         if (!res.error) {
-            this.evals = JSON.parse(res.content);
+            try {
+                this.evals = JSON.parse(res.content);
+            }
+            catch (err) {
+                console.log("could not parse evals");
+            }
             for (var fen in this.evals) {
                 if (fen.lastIndexOf(" b") > 0) {
                     delete this.evals[fen];
@@ -4419,8 +4453,42 @@ var wBoard = /** @class */ (function (_super) {
         this.draw();
     };
     wBoard.prototype.showBookPage = function () {
-        if (Globals.gui.book == null)
+        var _this = this;
+        var gui = Globals.gui;
+        var book = gui.book;
+        if (book == null)
             return;
+        if (gui.doAtomicBook) {
+            console.log("looking up page in database");
+            var ab = gui.startup.atomicbook;
+            var fen_1 = this.reportFen();
+            var tfen = gui.book.truncfen(fen_1);
+            var apiurl = ab.databaseUrl + "/databases/" + ab.dbName + "/collections/" + ab.collName + "?q={\"tfen\":\"" + tfen + "\"}&apiKey=" + ab.databaseAccessToken;
+            fetch(apiurl).then(function (response) { return response.text(); }).then(function (content) {
+                try {
+                    console.log("page loaded");
+                    var json = JSON.parse(content);
+                    var doc = json[0];
+                    var movestext = doc.movestext;
+                    var moves = JSON.parse(movestext);
+                    var pos = Globals.gui.book.getPosition(fen_1);
+                    for (var san in moves) {
+                        var ms = moves[san]["ms"];
+                        var bm = pos.getMove(san);
+                        bm.ms = ms;
+                    }
+                }
+                catch (err) {
+                    console.log(err);
+                }
+                _this.showBookPageInner();
+            });
+        }
+        else {
+            this.showBookPageInner();
+        }
+    };
+    wBoard.prototype.showBookPageInner = function () {
         var pos = Globals.gui.book.getPosition(this.reportFen());
         var bcd = Globals.gui.bookcontentdiv;
         bcd.html("");
@@ -4431,6 +4499,7 @@ var wBoard = /** @class */ (function (_super) {
             var tr = new HTMLTableRowElement_();
             var bm = pos.getMove(san);
             var annot = bm.annot;
+            var ms = bm.ms;
             var full = san + " " + annot.getAnnotStr();
             var a = new HTMLLabelElement_().
                 html(full).
@@ -4444,6 +4513,13 @@ var wBoard = /** @class */ (function (_super) {
                 paddingPx(5).
                 widthPx(100).
                 appendChild(a));
+            tr.appendChild(new HTMLTableColElement_().
+                paddingPx(5).
+                widthPx(100).
+                fontSizePx(22).
+                fontWeight("bold").
+                color(Misc.scoreColor(ms)).
+                appendChild(new HTMLDivElement_().html("" + ms)));
             var cspan = new HTMLSpanElement_().opacityNumber(0.8);
             for (var akey in BookUtils.annotations) {
                 var annot_1 = BookUtils.annotations[akey];
