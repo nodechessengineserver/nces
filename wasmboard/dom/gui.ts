@@ -586,6 +586,7 @@ class GUI{
         if(Misc.isDefined(su.atomicbook)){
             console.log("atomicbook detected",su.atomicbook)     
             this.doAtomicBook=true
+            this.tabs.setSelected("book")
             Globals.wboard.showBookPage()
         }
     }
