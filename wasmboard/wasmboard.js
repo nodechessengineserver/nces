@@ -3780,6 +3780,7 @@ var GUI = /** @class */ (function () {
         if (Misc.isDefined(su.atomicbook)) {
             console.log("atomicbook detected", su.atomicbook);
             this.doAtomicBook = true;
+            this.tabs.setSelected("book");
             Globals.wboard.showBookPage();
         }
     };
@@ -4505,8 +4506,8 @@ var wBoard = /** @class */ (function (_super) {
                 html(full).
                 fontSizePx(25).
                 cursor("pointer").
-                fontWeight(annot.empty() ? "normal" : "bold").
-                opacityNumber(annot.empty() ? 0.5 : 1.0).
+                fontWeight(annot.empty() ? (gui.doAtomicBook ? "bold" : "normal") : "bold").
+                opacityNumber(annot.empty() ? (gui.doAtomicBook ? 1 : 0.5) : 1.0).
                 color(annot.color).
                 addEventListener("mousedown", this.bookMoveClicked.bind(this, san));
             tr.appendChild(new HTMLTableColElement_().
