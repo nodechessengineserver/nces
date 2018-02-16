@@ -292,21 +292,16 @@ class wBoard extends WasmLoader.WasmLoader implements Loadable{
         Globals.gui.book.store()
         this.draw()
     }
-    showBookPage(){
-        let gui=Globals.gui
-        let book=gui.book
-        if(book==null) return        
-        if(gui.doAtomicBook){
-            console.log("looking up page in database")
-            let ab=gui.startup.atomicbook  
-            let fen=this.reportFen()
-            let tfen=gui.book.truncfen(fen)          
-            let apiurl=`${ab.databaseUrl}/databases/${ab.dbName}/collections/${ab.collName}?q={"tfen":"${tfen}"}&apiKey=${ab.databaseAccessToken}`
-            fetch(apiurl).then(response=>response.text()).then(content=>{
-                try{
-                    console.log("page loaded")
-                    let json=JSON.parse(content)                    
-                    let doc=json[0]
+    tryFetchBookPage(fen:string,tfen:string,callback:any){
+        console.log("looking up page in database "+tfen)                    
+        let ab=gui.startup.atomicbook  
+        let apiurl=`${ab.databaseUrl}/databases/${ab.dbName}/collections/${ab.collName}?q={"tfen":"${tfen}"}&apiKey=${ab.databaseAccessToken}`
+        fetch(apiurl).then(response=>response.text()).then(content=>{
+            try{
+                console.log("page loaded")
+                let json=JSON.parse(content)                    
+                let doc=json[0]
+                if(doc!=undefined){
                     let movestext=doc.movestext
                     let moves=JSON.parse(movestext)
                     let pos=Globals.gui.book.getPosition(fen)
@@ -315,11 +310,33 @@ class wBoard extends WasmLoader.WasmLoader implements Loadable{
                         let bm=pos.getMove(san)
                         bm.ms=ms
                     }
-                }catch(err){
-                    console.log(err)
-                }                
-                this.showBookPageInner()            
-            })            
+                    this.showBookPageInner()
+                }else{
+                    console.log("doc undefined")
+                    callback()
+                }
+            }catch(err){
+                console.log(err)
+                callback()
+            }                
+        })            
+    }
+    showBookPage(){
+        let gui=Globals.gui
+        let book=gui.book
+        if(book==null) return        
+        if(gui.doAtomicBook){            
+            let fen=this.reportFen()
+            let tfen=gui.book.truncfen(fen)          
+            this.tryFetchBookPage(fen,tfen,(function(){
+                let parts=tfen.split(" ")
+                parts[3]="-"
+                let tfen2=parts.join(" ")
+                console.log("retry")
+                this.tryFetchBookPage(fen,tfen2,(function(){
+                    this.showBookPageInner()
+                }).bind(this))
+            }).bind(this))
         }else{
             this.showBookPageInner()
         }
