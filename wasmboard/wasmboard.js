@@ -4453,37 +4453,55 @@ var wBoard = /** @class */ (function (_super) {
         Globals.gui.book.store();
         this.draw();
     };
-    wBoard.prototype.showBookPage = function () {
+    wBoard.prototype.tryFetchBookPage = function (fen, tfen, callback) {
         var _this = this;
-        var gui = Globals.gui;
-        var book = gui.book;
-        if (book == null)
-            return;
-        if (gui.doAtomicBook) {
-            console.log("looking up page in database");
-            var ab = gui.startup.atomicbook;
-            var fen_1 = this.reportFen();
-            var tfen = gui.book.truncfen(fen_1);
-            var apiurl = ab.databaseUrl + "/databases/" + ab.dbName + "/collections/" + ab.collName + "?q={\"tfen\":\"" + tfen + "\"}&apiKey=" + ab.databaseAccessToken;
-            fetch(apiurl).then(function (response) { return response.text(); }).then(function (content) {
-                try {
-                    console.log("page loaded");
-                    var json = JSON.parse(content);
-                    var doc = json[0];
+        console.log("looking up page in database " + tfen);
+        var ab = gui.startup.atomicbook;
+        var apiurl = ab.databaseUrl + "/databases/" + ab.dbName + "/collections/" + ab.collName + "?q={\"tfen\":\"" + tfen + "\"}&apiKey=" + ab.databaseAccessToken;
+        fetch(apiurl).then(function (response) { return response.text(); }).then(function (content) {
+            try {
+                console.log("page loaded");
+                var json = JSON.parse(content);
+                var doc = json[0];
+                if (doc != undefined) {
                     var movestext = doc.movestext;
                     var moves = JSON.parse(movestext);
-                    var pos = Globals.gui.book.getPosition(fen_1);
+                    var pos = Globals.gui.book.getPosition(fen);
                     for (var san in moves) {
                         var ms = moves[san]["ms"];
                         var bm = pos.getMove(san);
                         bm.ms = ms;
                     }
+                    _this.showBookPageInner();
                 }
-                catch (err) {
-                    console.log(err);
+                else {
+                    console.log("doc undefined");
+                    callback();
                 }
-                _this.showBookPageInner();
-            });
+            }
+            catch (err) {
+                console.log(err);
+                callback();
+            }
+        });
+    };
+    wBoard.prototype.showBookPage = function () {
+        var gui = Globals.gui;
+        var book = gui.book;
+        if (book == null)
+            return;
+        if (gui.doAtomicBook) {
+            var fen_1 = this.reportFen();
+            var tfen_1 = gui.book.truncfen(fen_1);
+            this.tryFetchBookPage(fen_1, tfen_1, (function () {
+                var parts = tfen_1.split(" ");
+                parts[3] = "-";
+                var tfen2 = parts.join(" ");
+                console.log("retry");
+                this.tryFetchBookPage(fen_1, tfen2, (function () {
+                    this.showBookPageInner();
+                }).bind(this));
+            }).bind(this));
         }
         else {
             this.showBookPageInner();
